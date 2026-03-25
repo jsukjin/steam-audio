@@ -485,7 +485,7 @@ def configure_cmake(name, cmake_layers, platform, cmake, vs_version, ndk_path, e
     make_dir(build_dir)
     make_dir(install_dir)
 
-    cmake_args = []
+    cmake_args = ['-DCMAKE_POLICY_VERSION_MINIMUM=3.5']
 
     if platform == 'windows-x86':
         cmake_args += ['-G', vs_generator_name(vs_version), '-A', 'Win32']
