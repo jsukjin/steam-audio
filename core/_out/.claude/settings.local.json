@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\\\\.py)",
+      "Bash(\\\\.bat)",
+      "Bash(\\\\.txt\")",
+      "Bash(xargs grep *)",
+      "Bash(xargs ls *)"
+    ]
+  }
+}
