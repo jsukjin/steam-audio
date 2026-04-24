@@ -44,3 +44,8 @@ git merge upstream/main
 5. (선택 사항) 내 GitHub 저장소(Remote)에도 반영
 git push origin main
 
+## 3. Debug (Visual) 실행방법
+1. phnon_itest 빌드
+2. 빌드 된 경로에서 실행 (예: 나의 경로는 F:\GitHub\steam-audio\core\_out\src\itest\Debug)
+3. cmd애서 phonon_itest.exe [test항목] (예 : phonon_itest.exe gui)
+
