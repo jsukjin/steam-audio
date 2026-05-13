@@ -43,7 +43,9 @@ ITEST(panningeffect)
 
     auto display = [&]()
     {
-        UIWindow::drawPoint(source, UIColor::kRed);
+      UIWindow::drawPoint(source, UIColor::kRed);
+
+      //  printf("panning-ffect display callback - source - x = %f, y = %f, z = %f \n", source.x(), source.y(), source.z());
     };
 
     auto processAudio = [&](const AudioBuffer& inBuffer, AudioBuffer& outBuffer)
@@ -51,6 +53,8 @@ ITEST(panningeffect)
         AudioBuffer::downmix(inBuffer, mono);
 
         auto direction = UIWindow::sCamera.transformDirectionFromWorldToLocal(source);
+
+        //printf("panningeffect-audioprocess - direction x = %f, y = %f, z = %f \n", direction.x(), direction.y(), direction.z());
 
         PanningEffectParams params{};
         params.direction = &direction;

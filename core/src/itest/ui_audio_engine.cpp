@@ -23,7 +23,25 @@
 
 namespace ipl {
 
-const std::string UIAudioEngine::kAudioClipsDirectory{"../../data/audio/"};
+//const std::string UIAudioEngine::kAudioClipsDirectory{"../../data/audio/"};
+
+#if defined(DEBUG_AUDIO_VS_WORK)
+//for VS debug
+//work
+const std::string UIAudioEngine::kAudioClipsDirectory{ "F:/GitHub/steam-audio/core/data/audio/" };
+#endif //
+
+#if defined(DEBUG_AUDIO_VS_HOME)
+//for VS debug
+const std::string UIAudioEngine::kAudioClipsDirectory{ "D:/GitHub/steam-audio/core/data/audio/" };
+#endif
+
+#if !defined(DEBUG_AUDIO_VS_HOME) && !defined(DEBUG_AUDIO_VS_WORK)
+//for BAT debug
+const std::string UIAudioEngine::kAudioClipsDirectory = std::string(getenv("PHONON_AUDIO_TEST_DIR"));
+#endif
+
+//
 
 UIAudioEngine::UIAudioEngine(int samplingRate,
 							 int frameSize,

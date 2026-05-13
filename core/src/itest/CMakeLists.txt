@@ -72,3 +72,15 @@ get_bin_subdir(IPL_BIN_SUBDIR)
 install(TARGETS phonon_itest RUNTIME DESTINATION bin/${IPL_BIN_SUBDIR})
 
 include(CMakeListsInternal.txt OPTIONAL)
+
+# 기본값을 OFF로 설정
+option(ENABLE_DEBUG_AUDIO_HOME "Enable audio debug mode" ON) #enable in VS debug
+option(ENABLE_DEBUG_AUDIO_WORK "Enable audio debug mode" OFF) #enABLE IN vs DEBUG
+
+if(ENABLE_DEBUG_AUDIO_HOME)
+	target_compile_definitions(phonon_itest PRIVATE DEBUG_AUDIO_VS_HOME)
+endif()
+
+if (ENABLE_DEBUG_AUDIO_WORK)
+target_compile_definitions(phonon_itest PRIVATE DEBUG_AUDIO_VS_WORK)
+endif()
