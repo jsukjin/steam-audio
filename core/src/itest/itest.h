@@ -20,6 +20,24 @@
 #include <string>
 #include <vector>
 
+#define DEBUG_AUDIO_VS_WORK 1
+#define DEBUG_AUDIO_VS_HOME 0
+#define DEBUG_AUDIO_VS_BAT 0
+
+#if DEBUG_AUDIO_VS_WORK
+#undef  DEBUG_AUDIO_VS_HOME
+#define DEBUG_AUDIO_VS_HOME 0
+#endif
+#if DEBUG_AUDIO_VS_HOME
+#undef  DEBUG_AUDIO_VS_WORK
+#define DEBUG_AUDIO_VS_WORK 0
+#endif
+
+#if !DEBUG_AUDIO_VS_WORK && !DEBUG_AUDIO_VS_HOME
+#define DEBUG_AUDIO_VS_BAT 1
+#else
+#define DEBUG_AUDIO_VS_BAT 0
+#endif
 
 class FunctionRegistry
 {

@@ -23,6 +23,7 @@
 #include <fstream>
 
 #include <Windows.h>
+#include "itest.h"
 
 
 std::shared_ptr<HRTFDatabase> loadHRTF(shared_ptr<Context> context,
@@ -57,7 +58,28 @@ std::shared_ptr<IScene> loadMesh(shared_ptr<Context> context,
                                  shared_ptr<EmbreeDevice> embree,
 								 shared_ptr<ipl::RadeonRaysDevice> radeonRays)
 {
-    std::ifstream mtlfile((std::string{"../../data/meshes/"} +materialFileName).c_str());
+    //std::ifstream mtlfile((std::string{"../../data/meshes/"} +materialFileName).c_str());
+
+
+#if DEBUG_AUDIO_VS_WORK
+//for VS debug
+    const std::string dataStr = std::string("F:/GitHub/steam-audio/core/data/meshes/");
+#endif
+
+#if DEBUG_AUDIO_VS_HOME
+	//for VS debug
+    const std::string dataStr = std::string("D:/GitHub/steam-audio/core/data/meshes/");
+#endif
+
+#if DEBUG_AUDIO_VS_BAT
+    const std::string dataStr = std::string(getenv("PHONON_MESHES_TEST_DIR"));
+#endif
+
+    //std::ifstream mtlfile((std::string{ "/../../data/meshes/" } + materialFileName).c_str());
+
+    //@@KURT
+    std::ifstream mtlfile((dataStr + materialFileName).c_str());
+
     if (!mtlfile.good())
     {
         printf("unable to find mtl file.");
@@ -150,7 +172,10 @@ std::shared_ptr<IScene> loadMesh(shared_ptr<Context> context,
         }
     }
 
-    std::ifstream file((std::string{"../../data/meshes/"} +fileName).c_str());
+    //std::ifstream file((std::string{ "../../data/meshes/" } + fileName).c_str());
+    //@@KURT
+    std::ifstream file((dataStr + fileName).c_str());
+
     if (!file.good())
     {
         printf("unable to find obj file.");

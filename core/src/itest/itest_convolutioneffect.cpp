@@ -27,7 +27,7 @@ using namespace ipl;
 
 ITEST(convolutioneffect)
 {
-    auto context = std::make_shared<Context>(nullptr, nullptr, nullptr, SIMDLevel::AVX2, STEAMAUDIO_VERSION);
+    auto context = std::make_shared<Context>(nullptr, nullptr, nullptr, SIMDLevel::SSE2, STEAMAUDIO_VERSION);
 
     SceneType sceneType = SceneType::Embree;
     IndirectEffectType indirectType = IndirectEffectType::Convolution;
