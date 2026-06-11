@@ -1,50 +1,153 @@
 @echo off
 chcp 65001 >nul
+
 echo ============================================================
-echo  [STEP 5] CMake Configure - Generate Phonon.sln
+echo  [STEP 4] Fix Dependencies (flatbuffers/pffft/zlib/mysofa) and rebuild
 echo ============================================================
 echo.
-echo  CMake will scan all dependencies via FindXXX.cmake
-echo  and generate the Visual Studio solution file.
-echo.
 
-set CORE_DIR=%~dp0
-set CORE_DIR=%CORE_DIR:~0,-1%
-set OUT_DIR=%CORE_DIR%\_out
+set "CORE_DIR=%~dp0"
+set "DEPS_BUILD=%CORE_DIR%deps-build"
+set "BUILD_DIR=%CORE_DIR%build"
 
-echo  Output : %OUT_DIR%\Phonon.sln
-echo.
+REM ============================================================
+REM Detect installed Visual Studio
+REM ============================================================
 
-echo [Removing existing _out folder to avoid CMakeCache conflicts]
-if exist "%OUT_DIR%" (
-    echo   Deleting _out ...
-    rmdir /s /q "%OUT_DIR%"
-    echo   Done
-) else ( echo   No _out folder, skipping )
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if exist "%VSWHERE%" goto :FOUND_VSWHERE
 
-echo.
-echo [Running CMake configure]
-cmake -S "%CORE_DIR%" -B "%OUT_DIR%" -G "Visual Studio 17 2022" -A x64
+set "VSWHERE=%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe"
+if exist "%VSWHERE%" goto :FOUND_VSWHERE
+
+echo [ERROR] Visual Studio Installer not found.
+goto :ERROR_PAUSE
 
 
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo  FAILED: CMake configure failed.
-    echo  Check the error messages above.
-    echo  If a REQUIRED dependency is missing, run step4_fix_stamps.bat first.
-    echo.
-    pause
-    exit /b 1
+:FOUND_VSWHERE
+:: 안전하게 임시 파일을 이용해 버전 및 라인 버전 추출
+"%VSWHERE%" -latest -products * -property installationVersion > "%temp%\vs_ver.txt" 2>nul
+set /p VS_VERSION=<"%temp%\vs_ver.txt"
+del "%temp%\vs_ver.txt"
+
+"%VSWHERE%" -latest -products * -property catalog_productLineVersion > "%temp%\vs_major.txt" 2>nul
+set /p VS_MAJOR=<"%temp%\vs_major.txt"
+del "%temp%\vs_major.txt"
+
+echo Found VS Version: %VS_VERSION%
+echo Detected Visual Studio : %VS_MAJOR%
+
+:: 메이저 버전 번호 기반 Generator 매핑
+set "VS_MAJOR_NUM=%VS_VERSION:~0,2%"
+set "VS_GENERATOR="
+
+if "%VS_MAJOR_NUM%"=="18" set "VS_GENERATOR=Visual Studio 18 2026"
+if "%VS_MAJOR_NUM%"=="17" set "VS_GENERATOR=Visual Studio 17 2022"
+if "%VS_MAJOR_NUM%"=="16" set "VS_GENERATOR=Visual Studio 16 2019"
+
+if "%VS_GENERATOR%"=="" (
+    echo [ERROR] Unsupported Visual Studio version.
+    goto :ERROR_PAUSE
 )
 
+echo Using Generator: %VS_GENERATOR%
+
+
+REM ============================================================
+REM 툴체인 분기 처리 (get_dependencies.py 예외 허용을 위해 vs2022 고정)
+REM ============================================================
+set "TOOLCHAIN=vs2022"
+goto :PATCH_SCRIPTS
+
+
+:PATCH_SCRIPTS
+REM ============================================================
+REM 임시 파이썬 스크립트를 생성하여 파일 치환 수행
+REM ============================================================
+echo [INFO] Patching Python scripts via temporary patcher...
+
+echo import os > "%temp%\audio_patch.py"
+echo def patch(file_path, new_str): >> "%temp%\audio_patch.py"
+echo     if not os.path.exists(file_path): return >> "%temp%\audio_patch.py"
+echo     content = '' >> "%temp%\audio_patch.py"
+echo     for enc in ['utf-8', 'cp949', 'latin-1']: >> "%temp%\audio_patch.py"
+echo         try: >> "%temp%\audio_patch.py"
+echo             with open(file_path, 'r', encoding=enc) as f: content = f.read() >> "%temp%\audio_patch.py"
+echo             break >> "%temp%\audio_patch.py"
+echo         except: continue >> "%temp%\audio_patch.py"
+echo     if not content: return >> "%temp%\audio_patch.py"
+echo     patched = content.replace('Visual Studio 17 2022', new_str).replace('Visual Studio 16 2019', new_str) >> "%temp%\audio_patch.py"
+echo     with open(file_path, 'w', encoding='utf-8') as f: f.write(patched) >> "%temp%\audio_patch.py"
+
+set "TARGET_DEPS=%CORE_DIR%build\get_dependencies.py"
+set "TARGET_BUILD=%CORE_DIR%build\build.py"
+
+echo patch(r'%TARGET_DEPS%', r'%VS_GENERATOR%') >> "%temp%\audio_patch.py"
+echo patch(r'%TARGET_BUILD%', r'%VS_GENERATOR%') >> "%temp%\audio_patch.py"
+
+python "%temp%\audio_patch.py"
+set "PATCH_STATUS=%ERRORLEVEL%"
+del "%temp%\audio_patch.py"
+
+if %PATCH_STATUS% NEQ 0 (
+    echo [ERROR] Python script modification failed.
+    goto :ERROR_PAUSE
+)
+
+echo [OK] Python scripts patched successfully.
+
+
+:CACHE_CLEAN
+echo Using Toolchain Target: %TOOLCHAIN% (Patched internally for VS2026)
+echo.
+
+REM ============================================================
+REM 모든 디펜던시 캐시 일괄 삭제 (flatbuffers, pffft, zlib, mysofa)
+REM ============================================================
+echo [Cleaning dependencies cache...]
+for %%d in (flatbuffers pffft zlib mysofa) do (
+    if exist "%DEPS_BUILD%\%%d\src"   rmdir /s /q "%DEPS_BUILD%\%%d\src"
+    if exist "%DEPS_BUILD%\%%d\build" rmdir /s /q "%DEPS_BUILD%\%%d\build"
+    if exist "%DEPS_BUILD%\%%d\stamp" rmdir /s /q "%DEPS_BUILD%\%%d\stamp"
+)
+
+cd /d "%BUILD_DIR%"
+if %ERRORLEVEL% NEQ 0 echo [ERROR] Failed to change directory to %BUILD_DIR% & goto :ERROR_PAUSE
+
+
+REM ============================================================
+REM 순차 빌드 실행
+REM ============================================================
+
+echo [1/4] Rebuilding flatbuffers...
+python get_dependencies.py -p windows -a x64 -t %TOOLCHAIN% --dependency flatbuffers
+if %ERRORLEVEL% NEQ 0 echo [ERROR] flatbuffers build failed. & goto :ERROR_PAUSE
+
+echo [2/4] Rebuilding pffft...
+python get_dependencies.py -p windows -a x64 -t %TOOLCHAIN% --dependency pffft
+if %ERRORLEVEL% NEQ 0 echo [ERROR] pffft build failed. & goto :ERROR_PAUSE
+
+echo [3/4] Rebuilding zlib...
+python get_dependencies.py -p windows -a x64 -t %TOOLCHAIN% --dependency zlib
+if %ERRORLEVEL% NEQ 0 echo [ERROR] zlib build failed. & goto :ERROR_PAUSE
+
+echo [4/4] Rebuilding mysofa...
+python get_dependencies.py -p windows -a x64 -t %TOOLCHAIN% --dependency mysofa
+if %ERRORLEVEL% NEQ 0 echo [ERROR] mysofa build failed. & goto :ERROR_PAUSE
+
+
 echo.
 echo ============================================================
-echo  Success!
-echo.
-echo  Solution file : %OUT_DIR%\Phonon.sln
-echo.
-echo  Open in Visual Studio, or build from command line:
-echo    cmake --build "%OUT_DIR%" --config Release
+echo Dependencies Rebuild Complete. Next: step5_cmake.bat
 echo ============================================================
-echo.
 pause
+exit /b 0
+
+
+:ERROR_PAUSE
+echo.
+echo -----------------------------------------------------------
+echo [STOP] 에러를 포착하여 스크립트를 일시 정지했습니다.
+echo -----------------------------------------------------------
+pause
+exit /b 1

@@ -57,9 +57,9 @@ def vs_generator_name(version):
     elif version == 2017:
         return 'Visual Studio 15 2017'
     elif version == 2019:
-        return 'Visual Studio 16 2019'
+        return 'Visual Studio 18 2026'
     elif version == 2022:
-        return 'Visual Studio 17 2022'
+        return 'Visual Studio 18 2026'
     else:
         return 'unknown'
 

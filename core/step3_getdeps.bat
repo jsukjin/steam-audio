@@ -27,7 +27,38 @@ pause >nul
 set CORE_DIR=%~dp0
 cd /d "%CORE_DIR%build"
 
-python get_dependencies.py -p windows -a x64 -t vs2022
+
+@echo off
+
+set VSWHERE="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+
+for /f "usebackq delims=" %%i in (`
+    %VSWHERE% -latest -products * -property installationVersion
+`) do set VS_VERSION=%%i
+
+set TOOLCHAIN=
+
+echo %VS_VERSION% | findstr /b "18." >nul
+if not errorlevel 1 set TOOLCHAIN=vs2026
+
+echo %VS_VERSION% | findstr /b "17." >nul
+if not errorlevel 1 set TOOLCHAIN=vs2022
+
+echo %VS_VERSION% | findstr /b "16." >nul
+if not errorlevel 1 set TOOLCHAIN=vs2019
+
+if "%TOOLCHAIN%"=="" (
+    echo Unsupported Visual Studio version: %VS_VERSION%
+    pause
+    exit /b 1
+)
+
+echo Detected Visual Studio: %VS_VERSION%
+echo Using toolchain: %TOOLCHAIN%
+
+python get_dependencies.py -p windows -a x64 -t %TOOLCHAIN%
+
+##python get_dependencies.py -p windows -a x64 -t vs2022
 
 echo.
 echo ============================================================

@@ -71,9 +71,9 @@ def generator_name(args):
         elif args.toolchain == 'vs2017':
             generator = 'Visual Studio 15 2017'
         elif args.toolchain == 'vs2019':
-            generator = 'Visual Studio 16 2019'
+            generator = 'Visual Studio 18 2026'
         elif args.toolchain == 'vs2022':
-            generator = 'Visual Studio 17 2022'
+            generator = 'Visual Studio 18 2026'
         return generator + suffix
     elif args.platform in ['osx', 'ios']:
         return 'Xcode'
