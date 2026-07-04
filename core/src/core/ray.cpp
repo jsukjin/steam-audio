@@ -107,7 +107,6 @@ bool Ray::intersect(const Box& box,
     maximum = (box.coordinates(directionSigns[2]).z() - origin.z()) * reciprocalDirection.z();
     minDistance = std::max(minDistance, minimum);
     maxDistance = std::min(maxDistance, maximum);
-
     // If the intersection of all three intervals is non-empty, the ray
     // passes through the box.
     return (minDistance <= maxDistance);

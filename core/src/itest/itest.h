@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#define DEBUG_AUDIO_VS_WORK 1
-#define DEBUG_AUDIO_VS_HOME 0
+#define DEBUG_AUDIO_VS_WORK 0
+#define DEBUG_AUDIO_VS_HOME 1
 #define DEBUG_AUDIO_VS_BAT 0
 
 #if DEBUG_AUDIO_VS_WORK

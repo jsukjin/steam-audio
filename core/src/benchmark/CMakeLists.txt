@@ -46,6 +46,20 @@ add_executable(phonon_perf
 
 target_link_libraries(phonon_perf PRIVATE core hrtf)
 
+# mysofa.lib (deps/mysofa) was prebuilt against the dynamic UCRT: its check.obj
+# references __imp___stdio_common_vsscanf, a DLL-import stub that only exists in
+# ucrt.lib (the import lib for the dynamic UCRT). STEAMAUDIO_STATIC_RUNTIME links
+# the static CRT (/MT) for the rest of the project, so that stub is normally absent,
+# causing LNK2001/LNK1120.
+#
+# Linking the whole ucrt.lib pulls in extra members (realloc, strncmp, ...) that
+# collide with the static libucrt.lib already in the link (LNK2005). Instead,
+# alias the missing import slot directly to the equivalent function that already
+# exists statically, via /ALTERNATENAME. No extra library needed.
+if (IPL_OS_WINDOWS)
+	target_link_options(phonon_perf PRIVATE "/ALTERNATENAME:__imp___stdio_common_vsscanf=__stdio_common_vsscanf")
+endif()
+
 target_compile_definitions(phonon_perf PRIVATE STEAMAUDIO_BUILDING_CORE)
 
 if (IPL_OS_WINDOWS AND IPL_CPU_X64)

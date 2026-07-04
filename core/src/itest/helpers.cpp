@@ -68,7 +68,7 @@ std::shared_ptr<IScene> loadMesh(shared_ptr<Context> context,
 
 #if DEBUG_AUDIO_VS_HOME
 	//for VS debug
-    const std::string dataStr = std::string("D:/GitHub/steam-audio/core/data/meshes/");
+    const std::string dataStr = std::string("F:/GitHub/steam-audio/core/data/meshes/");
 #endif
 
 #if DEBUG_AUDIO_VS_BAT
