@@ -28,7 +28,7 @@ if exist "%OUT_DIR%" (
 echo.
 echo [Running CMake configure]
 set SRC=%UNREAL_DIR:~0,-1%
-set OUT=%OUT_DIR:~0,-1%
+set OUT=%OUT_DIR%
 
 REM CMake configuration for Unreal Engine plugin
 REM Additional options can be added here:
