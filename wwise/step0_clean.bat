@@ -6,7 +6,6 @@ echo ============================================================
 echo.
 echo  The following folders will be deleted:
 echo.
-echo    build\                    - CMake build files
 echo    _out\                     - CMake output (build artifacts)
 echo.
 echo  After clean, run step1 through step2 again from scratch.
@@ -17,14 +16,7 @@ pause >nul
 set WWISE_DIR=%~dp0
 
 echo.
-echo [1/2] Deleting build ...
-if exist "%WWISE_DIR%build" (
-    rmdir /s /q "%WWISE_DIR%build"
-    echo   Done
-) else ( echo   Not found, skipping )
-
-echo.
-echo [2/2] Deleting _out ...
+echo [1/1] Deleting _out ...
 if exist "%WWISE_DIR%_out" (
     rmdir /s /q "%WWISE_DIR%_out"
     echo   Done
